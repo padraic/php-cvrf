@@ -159,6 +159,53 @@ class Document
         return $this;
     }
 
+    public function setDocumentNotes($value)
+    {
+        if (empty($value) || !is_array($value)) {
+            throw new Exception\InvalidArgumentException(
+                'Invalid parameter: parameter MUST be a non-empty array where '
+                . ' each element of the array is an array of "title", "audience" and '
+                . ' "type" for each document note being added'
+            );
+        }
+        foreach ($value as $note) {
+            $this->addDocumentNote($note);
+        }
+        return $this;
+    }
+
+    public function addDocumentNote(array $note)
+    {
+        if (empty($note) || !is_array($note)) {
+            throw new Exception\InvalidArgumentException(
+                'Invalid parameter: parameter MUST be a non-empty array containing '
+                . '"title", "audience" and "type" for this note'
+            );
+        }
+        if (!isset($note['title'])) {
+            throw new Exception\InvalidArgumentException(
+                'Each document note MUST have a title'
+            );
+        }
+        if (!isset($note['audience'])) {
+            throw new Exception\InvalidArgumentException(
+                'Each document note MUST have an audience'
+            );
+        }
+        if (!isset($note['type'])) {
+            throw new Exception\InvalidArgumentException(
+                'Each document note MUST have a type'
+            );
+        }
+        if (!isset($note['note'])) {
+            throw new Exception\InvalidArgumentException(
+                'Each document note MUST have the text of the note'
+            );
+        }
+        $this->data['documentnotes'][] = $note;
+        return $this;
+    }
+
     /**
      * Getters
      */
@@ -241,6 +288,14 @@ class Document
             return null;
         }
         return $this->data['revisionhistory'];
+    }
+
+    public function getDocumentNotes()
+    {
+        if (!array_key_exists('documentnotes', $this->data)) {
+            return null;
+        }
+        return $this->data['documentnotes'];
     }
 
 }

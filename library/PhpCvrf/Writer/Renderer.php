@@ -180,15 +180,29 @@ class Renderer
         $this->setRootElement($root);
         $this->dom->appendChild($root);
 
+        /**
+         * Header elements
+         */
         $this->_setLanguage($this->dom, $root);
         $this->_setDocumentTitle($this->dom, $root);
         $this->_setDocumentType($this->dom, $root);
         $this->_setDocumentPublisher($this->dom, $root);
-        $this->_setIdentification($this->dom, $root);
-        $this->_setStatus($this->dom, $root);
-        $this->_setRevisionHistory($this->dom, $root);
-        $this->_setInitialReleaseDate($this->dom, $root);
-        $this->_setCurrentReleaseDate($this->dom, $root);
+
+        /**
+         * Document Tracking elements
+         */
+        $tracking = $this->dom->createElement('DocumentTracking');
+        $root->appendChild($tracking);
+        $this->_setIdentification($this->dom, $tracking);
+        $this->_setStatus($this->dom, $tracking);
+        $this->_setRevisionHistory($this->dom, $tracking);
+        $this->_setInitialReleaseDate($this->dom, $tracking);
+        $this->_setCurrentReleaseDate($this->dom, $tracking);
+
+        /**
+         * Document Notes
+         */
+        $this->_setDocumentNotes($this->dom, $root);
 
         return $this;
     }
@@ -439,6 +453,29 @@ class Renderer
             $this->getDataContainer()->getInitialReleaseDate()
         );
         $type->appendChild($text);
+    }
+
+    protected function _setDocumentNotes(DOMDocument $dom, DOMElement $root)
+    {
+        if (!$this->getDataContainer()->getDocumentNotes()) {
+            return;
+        }
+
+        $notes = $this->getDataContainer()->getDocumentNotes();
+        $ordinal = 1;
+        $dn = $dom->createElement('DocumentNotes');
+        $root->appendChild($dn);
+        foreach ($notes as $key => $note) {
+            $n = $dom->createElement('Note');
+            $dn->appendChild($n);
+            $n->setAttribute('Title', $note['title']);
+            $n->setAttribute('Audience', $note['audience']);
+            $n->setAttribute('Type', $note['type']);
+            $n->setAttribute('Ordinal', str_pad($ordinal, 3, '0', STR_PAD_LEFT));
+            $ordinal++;
+            $text = $dom->createTextNode($note['note']);
+            $n->appendChild($text);
+        }
     }
 
 }
