@@ -258,6 +258,11 @@ class Document
         return $this;
     }
 
+    public function addVulnerability(Vulnerability $vulnerability)
+    {
+        $this->data['vulns'][] = $vulnerability;
+    }
+
     /**
      * Getters
      */
@@ -356,6 +361,14 @@ class Document
             return null;
         }
         return $this->data['products'];
+    }
+
+    public function getVulnerabilities()
+    {
+        if (!array_key_exists('vulns', $this->data)) {
+            return null;
+        }
+        return $this->data['vulns'];
     }
 
 }

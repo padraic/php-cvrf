@@ -209,6 +209,11 @@ class Renderer
          */
         $this->_setProductList($this->dom, $root);
 
+        /**
+         * Vulnerabilities
+         */
+        $this->_setVulnerabilities($this->dom, $root);
+
         return $this;
     }
 
@@ -531,6 +536,48 @@ class Renderer
                 $pid++;
             }
             $p->setAttribute('ProductID', $id);
+        }
+    }
+
+    protected function _setVulnerabilities(DOMDocument $dom, DOMElement $root)
+    {
+        if (!$this->getDataContainer()->getVulnerabilities()) {
+            return;
+        }
+
+        $vulns = $this->getDataContainer()->getVulnerabilities();
+        $ordinal = 1;
+        foreach($vulns as $vuln) {
+            /** Header */
+            $v = $dom->createElementNS(
+                'http://www.icasi.org/CVRF/schema/vuln/1.1',
+                'Vulnerability'
+            );
+            $v->setAttribute('Ordinal', $ordinal);
+            $ordinal++;
+            $root->appendChild($v);
+            /** Title */
+            $title = $dom->createElement('Title');
+            $v->appendChild($title);
+            $text = $dom->createTextNode($vuln->getTitle());
+            $title->appendChild($text);
+            /** Notes */
+            if (!is_null($vuln->getNotes())) {
+                $notes = $vuln->getNotes();
+                $n_ordinal = 1;
+                foreach ($notes as $note) {
+                    $n = $dom->createElement('Note');
+                    $v->appendChild($n);
+                    $n->setAttribute('Title', $note['title']);
+                    $n->setAttribute('Audience', $note['audience']);
+                    $n->setAttribute('Type', $note['type']);
+                    $n->setAttribute('Ordinal', $n_ordinal);
+                    $n_ordinal++;
+                    $text = $dom->createTextNode($note['note']);
+                    $n->appendChild($text);
+                }
+            }
+            /** */
         }
     }
 
