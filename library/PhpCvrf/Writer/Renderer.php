@@ -183,6 +183,12 @@ class Renderer
         $this->_setLanguage($this->dom, $root);
         $this->_setDocumentTitle($this->dom, $root);
         $this->_setDocumentType($this->dom, $root);
+        $this->_setDocumentPublisher($this->dom, $root);
+        $this->_setIdentification($this->dom, $root);
+        $this->_setStatus($this->dom, $root);
+        $this->_setRevisionHistory($this->dom, $root);
+        $this->_setInitialReleaseDate($this->dom, $root);
+        $this->_setCurrentReleaseDate($this->dom, $root);
 
         return $this;
     }
@@ -217,7 +223,7 @@ class Renderer
         if (!$this->getDataContainer()->getDocumentTitle()) {
             $message = 'CVRF 1.1 documents MUST contain a DocumentTitle, e.g.'
             . ' "Acme Security Advisory: XSS Vulnerabilities in Acme 1.8 - 2.1"';
-            $exception = new Writer\Exception\InvalidArgumentException($message);
+            $exception = new Exception\InvalidArgumentException($message);
             if (!$this->ignoreExceptions) {
                 throw $exception;
             } else {
@@ -245,7 +251,7 @@ class Renderer
         if (!$this->getDataContainer()->getDocumentType()) {
             $message = 'CVRF 1.1 documents MUST contain a DocumentType, e.g.'
             . ' "Security Advisory"';
-            $exception = new Writer\Exception\InvalidArgumentException($message);
+            $exception = new Exception\InvalidArgumentException($message);
             if (!$this->ignoreExceptions) {
                 throw $exception;
             } else {
@@ -257,6 +263,181 @@ class Renderer
         $type = $dom->createElement('DocumentType');
         $root->appendChild($type);
         $text = $dom->createTextNode($this->getDataContainer()->getDocumentType());
+        $type->appendChild($text);
+    }
+
+    /**
+     * Set document publisher field
+     *
+     * @param  DOMDocument $dom
+     * @param  DOMElement $root
+     * @return void
+     * @throws Writer\Exception\InvalidArgumentException
+     */
+    protected function _setDocumentPublisher(DOMDocument $dom, DOMElement $root)
+    {
+        if (!$this->getDataContainer()->getDocumentPublisher()) {
+            $message = 'CVRF 1.1 documents MUST contain a DocumentPublisher, set'
+            . ' to a value of Vendor, Discoverer, Coordinator, User or Other';
+            $exception = new Exception\InvalidArgumentException($message);
+            if (!$this->ignoreExceptions) {
+                throw $exception;
+            } else {
+                $this->exceptions[] = $exception;
+                return;
+            }
+        }
+
+        $pub = $dom->createElement('DocumentPublisher');
+        $root->appendChild($pub);
+        $pub->setAttribute('Type', ucfirst(strtolower(
+            $this->getDataContainer()->getDocumentPublisher()
+        )));
+    }
+
+    protected function _setIdentification(DOMDocument $dom, DOMElement $root)
+    {
+        if (!$this->getDataContainer()->getIdentification()) {
+            $message = 'CVRF 1.1 documents MUST contain an Identification ID, e.g.'
+            . ' "SA-2013-06"';
+            $exception = new Exception\InvalidArgumentException($message);
+            if (!$this->ignoreExceptions) {
+                throw $exception;
+            } else {
+                $this->exceptions[] = $exception;
+                return;
+            }
+        }
+
+        $i = $dom->createElement('Identification');
+        $root->appendChild($i);
+        $id = $dom->createElement('ID');
+        $i->appendChild($id);
+        $text = $dom->createTextNode(
+            $this->getDataContainer()->getIdentification()
+        );
+        $id->appendChild($text);
+    }
+
+    protected function _setStatus(DOMDocument $dom, DOMElement $root)
+    {
+        if (!$this->getDataContainer()->getStatus()) {
+            $message = 'CVRF 1.1 documents MUST contain a Status, e.g.'
+            . ' "Final"';
+            $exception = new Exception\InvalidArgumentException($message);
+            if (!$this->ignoreExceptions) {
+                throw $exception;
+            } else {
+                $this->exceptions[] = $exception;
+                return;
+            }
+        }
+
+        $type = $dom->createElement('Status');
+        $root->appendChild($type);
+        $text = $dom->createTextNode(ucfirst(strtolower(
+            $this->getDataContainer()->getStatus()
+        )));
+        $type->appendChild($text);
+    }
+
+    protected function _setRevisionHistory(DOMDocument $dom, DOMElement $root)
+    {
+        if (!$this->getDataContainer()->getRevisionHistory()) {
+            $message = 'CVRF 1.1 documents MUST contain a RevisionHistory';
+            $exception = new Exception\InvalidArgumentException($message);
+            if (!$this->ignoreExceptions) {
+                throw $exception;
+            } else {
+                $this->exceptions[] = $exception;
+                return;
+            }
+        }
+
+        $revisions = $this->getDataContainer()->getRevisionHistory();
+
+        /**
+         * Determine current version and set
+         */
+        $version = null;
+        foreach ($revisions as $key => $rev) {
+            if (is_null($version)) {
+                $version = $rev['version'];
+            } elseif (version_compare($rev['version'], $version, '>')) {
+                $version = $rev['version'];
+            }
+        }
+
+        $v = $dom->createElement('Version');
+        $root->appendChild($v);
+        $text = $dom->createTextNode($version);
+        $v->appendChild($text);
+
+        /**
+         * Append Revision History
+         */
+        $rh = $dom->createElement('RevisionHistory');
+        $root->appendChild($rh);
+        foreach ($revisions as $key => $rev) {
+            $r = $dom->createElement('Revision');
+            $rh->appendChild($r);
+            $ver = $dom->createElement('Number');
+            $date = $dom->createElement('Date');
+            $desc = $dom->createElement('Description');
+            $r->appendChild($ver);
+            $r->appendChild($date);
+            $r->appendChild($desc);
+            $text = $dom->createTextNode($rev['version']);
+            $ver->appendChild($text);
+            $text = $dom->createTextNode($rev['date']);
+            $date->appendChild($text);
+            $text = $dom->createTextNode($rev['description']);
+            $desc->appendChild($text);
+        }
+
+    }
+
+    protected function _setInitialReleaseDate(DOMDocument $dom, DOMElement $root)
+    {
+        if (!$this->getDataContainer()->getInitialReleaseDate()) {
+            $message = 'CVRF 1.1 documents MUST contain a InitialReleaseDate, e.g.'
+            . ' "2013-05-25T00:00:00+00:00"';
+            $exception = new Writer\Exception\InvalidArgumentException($message);
+            if (!$this->ignoreExceptions) {
+                throw $exception;
+            } else {
+                $this->exceptions[] = $exception;
+                return;
+            }
+        }
+
+        $type = $dom->createElement('InitialReleaseDate');
+        $root->appendChild($type);
+        $text = $dom->createTextNode(
+            $this->getDataContainer()->getInitialReleaseDate()
+        );
+        $type->appendChild($text);
+    }
+
+    protected function _setCurrentReleaseDate(DOMDocument $dom, DOMElement $root)
+    {
+        if (!$this->getDataContainer()->getCurrentReleaseDate()) {
+            $message = 'CVRF 1.1 documents MUST contain a CurrentReleaseDate, e.g.'
+            . ' "2013-05-25T00:00:00+00:00"';
+            $exception = new Writer\Exception\InvalidArgumentException($message);
+            if (!$this->ignoreExceptions) {
+                throw $exception;
+            } else {
+                $this->exceptions[] = $exception;
+                return;
+            }
+        }
+
+        $type = $dom->createElement('CurrentReleaseDate');
+        $root->appendChild($type);
+        $text = $dom->createTextNode(
+            $this->getDataContainer()->getInitialReleaseDate()
+        );
         $type->appendChild($text);
     }
 
