@@ -17,7 +17,7 @@
  * @author Fabien Potencier <fabien.potencier@symfony-project.org>
  */
 
-namespace CvrfParser;
+namespace PhpCvrf;
 
 class Loader
 {
