@@ -1,0 +1,24 @@
+{
+    "name": "padraic/phpcvrf",
+    "description": "XML Reader/Writer for the Common Vulnerability Reporting Framework (CVRF) 1.1",
+    "keywords": ["library", "security", "cvrf", "zend feed", "extension", "common vulnerability reporting framework"],
+    "homepage": "http://github.com/padraic/php-cvrf",
+    "license": "BSD-3-Clause",
+    "minimum-stability": "stable",
+    "authors": [
+        {
+            "name": "Pádraic Brady",
+            "email": "padraic.brady@gmail.com",
+            "homepage": "http://blog.astrumfutura.com"
+        }
+    ],
+    "require": {
+        "zendframework/zend-feed": ">=2.2.0"
+    },
+    "require-dev": {
+        "mockery/mockery": "dev-master@dev"
+    },
+    "autoload": {
+        "psr-0": { "PhpCvrf": "library/" }
+    }
+}
