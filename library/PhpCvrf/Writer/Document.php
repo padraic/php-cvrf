@@ -206,6 +206,58 @@ class Document
         return $this;
     }
 
+    public function setProducts($value)
+    {
+        if (empty($value) || !is_array($value)) {
+            throw new Exception\InvalidArgumentException(
+                'Invalid parameter: parameter MUST be a non-empty array where '
+                . ' each element of the array is an array of "name" and "branches"'
+                . ' where "branches" is itself a set of arrays of "type" and "name"'
+                . ' values'
+            );
+        }
+        if (!isset($product['id'])) {
+            $product['id'] = null;
+        }
+        foreach ($value as $product) {
+            $this->addProduct($product['name'], $product['branches'], $product['id']);
+        }
+        return $this;
+    }
+
+    public function addProduct($name, array $branches = array(), $id = null)
+    {
+        if (empty($name) || !is_string($name)) {
+            throw new Exception\InvalidArgumentException(
+                'Invalid parameter: parameter MUST be a non-empty string containing '
+                . 'the full product name and version'
+            );
+        }
+        if (!empty($branches)) {
+            foreach ($branches as $key => $branch) {
+                if (!isset($branch['type']) || !in_array(strtolower($branch['type']),
+                array("vendor", "product family", "product name", "product version",
+                "patch level", "service pack", "architecture", "language", "legacy",
+                "specification")
+                )) {
+                    throw new Exception\InvalidArgumentException(
+                        'Each product MAY have a type from the following list: '
+                        . '"vendor", "product family", "product name", '
+                        . '"product version", "patch level", "service pack", '
+                        . '"architecture", "language", "legacy", "specification"'
+                    );
+                }
+                if (!isset($branch['name'])) {
+                    throw new Exception\InvalidArgumentException(
+                        'Each product branch type must have a name'
+                    );
+                }
+            }
+        }
+        $this->data['products'][] = array('name'=>$name,'id'=>$id,'branches'=>$branches);
+        return $this;
+    }
+
     /**
      * Getters
      */
@@ -296,6 +348,14 @@ class Document
             return null;
         }
         return $this->data['documentnotes'];
+    }
+
+    public function getProducts()
+    {
+        if (!array_key_exists('products', $this->data)) {
+            return null;
+        }
+        return $this->data['products'];
     }
 
 }

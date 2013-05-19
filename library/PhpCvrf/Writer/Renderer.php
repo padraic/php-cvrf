@@ -204,6 +204,11 @@ class Renderer
          */
         $this->_setDocumentNotes($this->dom, $root);
 
+        /**
+         * Product List
+         */
+        $this->_setProductList($this->dom, $root);
+
         return $this;
     }
 
@@ -475,6 +480,57 @@ class Renderer
             $ordinal++;
             $text = $dom->createTextNode($note['note']);
             $n->appendChild($text);
+        }
+    }
+
+    protected function _setProductList(DOMDocument $dom, DOMElement $root)
+    {
+        if (!$this->getDataContainer()->getProducts()) {
+            $message = 'CVRF 1.1 documents MUST contain a Product List';
+            $exception = new Exception\InvalidArgumentException($message);
+            if (!$this->ignoreExceptions) {
+                throw $exception;
+            } else {
+                $this->exceptions[] = $exception;
+                return;
+            }
+        }
+
+        $pl = $dom->createElementNS(
+            'http://www.icasi.org/CVRF/schema/prod/1.1',
+            'ProductList');
+        $root->appendChild($pl);
+        $products = $this->getDataContainer()->getProducts();
+        $pid = '1';
+        foreach ($products as $product) {
+            $name = $product['name'];
+            $id = null;
+            if (isset($product['id']) && !is_null($product['id'])) {
+                $id = $product['id'];
+            }
+            $branches = $product['branches'];
+            $firstBranch = false;
+            foreach ($branches as $branch) {
+                $b = $dom->createElement('Branch');
+                if(false === $firstBranch) {
+                    $pl->appendChild($b);
+                    $firstBranch = true;
+                } else {
+                    $lastBranch->appendChild($b);
+                }
+                $lastBranch = $b;
+                $b->setAttribute('Type', $branch['type']);
+                $b->setAttribute('Name', $branch['name']);
+            }
+            $p = $dom->createElement('FullProductName');
+            $lastBranch->appendChild($p);
+            $text = $dom->createTextNode($name);
+            $p->appendChild($text);
+            if (is_null($id)) {
+                $id = 'CVRFPID-' . str_pad($pid, 4, '0', STR_PAD_LEFT);
+                $pid++;
+            }
+            $p->setAttribute('ProductID', $id);
         }
     }
 
